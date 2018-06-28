@@ -20,10 +20,11 @@ package namaste
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
 	"path"
 	"strings"
+
+	// Caltech Library Package
+	"github.com/caltechlibrary/storage"
 )
 
 func makeNamaste(tag, value string) string {
@@ -31,41 +32,44 @@ func makeNamaste(tag, value string) string {
 }
 
 func getNamaste(dName, tag string) ([]string, error) {
+	store, err := storage.Init(storage.FS, nil)
+	if err != nil {
+		return nil, err
+	}
 	results := []string{}
-	dInfo, err := os.Stat(dName)
+	dInfo, err := store.Stat(dName)
 	if err != nil {
 		return nil, err
 	}
 	if dInfo.IsDir() == false {
 		return nil, fmt.Errorf("expected %q to be a directory", dName)
 	}
-
-	dir, err := os.Open(dName)
-	if err != nil {
-		return nil, err
-	}
-	defer dir.Close()
-	items, err := dir.Readdir(-1)
+	items, err := store.ReadDir(dName)
 	prefix := fmt.Sprintf("%s=", tag)
 	for _, item := range items {
 		if strings.HasPrefix(item.Name(), prefix) {
 			results = append(results, item.Name())
 		}
 	}
-	//	sort.Strings(results)
 	return results, nil
 }
 
 func setNamaste(dName, tag, value string) (string, error) {
-	dInfo, err := os.Stat(dName)
+	store, err := storage.Init(storage.FS, nil)
 	if err != nil {
 		return "", err
 	}
-	if dInfo.IsDir() == false {
-		return "", fmt.Errorf("%q is not a directory", dName)
+	if store.Type == storage.FS {
+		dInfo, err := store.Stat(dName)
+		if err != nil {
+			return "", err
+		}
+		if dInfo.IsDir() == false {
+			return "", fmt.Errorf("%q is not a directory", dName)
+		}
 	}
 	namaste := makeNamaste(tag, value)
-	return namaste, ioutil.WriteFile(path.Join(dName, namaste), []byte(value+"\n"), 0664)
+	return namaste, store.WriteFile(path.Join(dName, namaste), []byte(value+"\n"), 0664)
 }
 
 func DirType(dName, val string) (string, error) {
@@ -89,19 +93,20 @@ func Where(dName, val string) (string, error) {
 }
 
 func Get(dName string) ([]string, error) {
-	dInfo, err := os.Stat(dName)
+	store, err := storage.Init(storage.FS, nil)
 	if err != nil {
 		return nil, err
 	}
-	if dInfo.IsDir() == false {
-		return nil, fmt.Errorf("%q is not a directory", dName)
+	if store.Type == storage.FS {
+		dInfo, err := store.Stat(dName)
+		if err != nil {
+			return nil, err
+		}
+		if dInfo.IsDir() == false {
+			return nil, fmt.Errorf("%q is not a directory", dName)
+		}
 	}
-	dir, err := os.Open(dName)
-	if err != nil {
-		return nil, err
-	}
-	defer dir.Close()
-	items, err := dir.Readdir(-1)
+	items, err := store.ReadDir(dName)
 	if err != nil {
 		return nil, err
 	}

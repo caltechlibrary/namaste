@@ -14,4 +14,17 @@ The Go package seeks to mimic the Python implementation as much as possible
 The command line implementation exercises the Go package and seeks to be largely
 command line compatible with the Python implementation.
 
+## Command line package
+
+The command line implementation's purpose is to exercise the Go package
+and test practical usage.  It is intended to be command line compatible
+with the Python implementation.
+
+## Planned Extensions
+
+There are a few things that extend existing namaste implementations. The
+first is the integration of alternatives for disc storage (e.g. Amazon S3
+and Google Cloud Storage).  The other is the ability to output the nameste
+elements as a JSON object.
+
 
