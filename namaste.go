@@ -27,6 +27,10 @@ import (
 	"github.com/caltechlibrary/storage"
 )
 
+const (
+	Version = `v0.0.1`
+)
+
 func makeNamaste(tag, value string) string {
 	return fmt.Sprintf("%s=%s", tag, value)
 }
@@ -126,14 +130,34 @@ func GetTypes(dName string) (map[string]map[string]string, error) {
 		return nil, err
 	}
 	types := map[string]map[string]string{}
+	var (
+		name    string
+		version []string
+	)
 	for _, t := range typeTags {
 		s := strings.SplitN(strings.TrimPrefix(t, "0="), "_", 2)
-		key := s[0]
-		version := strings.SplitN(s[1], ".", 2)
-		types[key] = map[string]string{
-			"name":  key,
-			"major": version[0],
-			"minor": version[1],
+		name = s[0]
+		if len(s) > 1 {
+			version = strings.SplitN(s[1], ".", 2)
+		} else {
+			version = []string{}
+		}
+		switch len(version) {
+		case 2:
+			types[name] = map[string]string{
+				"name":  name,
+				"major": version[0],
+				"minor": version[1],
+			}
+		case 1:
+			types[name] = map[string]string{
+				"name":  name,
+				"major": version[1],
+			}
+		default:
+			types[name] = map[string]string{
+				"name": name,
+			}
 		}
 	}
 	return types, nil
