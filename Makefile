@@ -38,8 +38,6 @@ website: page.tmpl README.md nav.md INSTALL.md LICENSE css/site.css
 
 test: clean bin/namaste$(EXT)
 	go test
-	bash test_cmd.bash
-	cd py && $(MAKE) test
 
 format:
 	gofmt -w namaste.go
