@@ -20,7 +20,7 @@ It is intended to be largely command line compatible with the Python
 implementation. 
 
 
-## Planned Extensions
+## Extensions
 
 There are a few things that extend beyond the existing Python namaste 
 implementation which are desirable to test. 

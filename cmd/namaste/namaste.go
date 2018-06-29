@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path"
@@ -142,6 +143,15 @@ func main() {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
 			os.Exit(1)
 		}
+		if asJSON {
+			src, err := json.Marshal(l)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				os.Exit(1)
+			}
+			fmt.Fprintf(os.Stdout, "%s\n", src)
+			os.Exit(0)
+		}
 		if verbose {
 			fmt.Fprintf(os.Stdout, "namastes: %s\n", strings.Join(l, ", "))
 		}
@@ -151,6 +161,15 @@ func main() {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
 			os.Exit(1)
+		}
+		if asJSON {
+			src, err := json.Marshal(m)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				os.Exit(1)
+			}
+			fmt.Fprintf(os.Stdout, "%s\n", src)
+			os.Exit(0)
 		}
 		for _, val := range m {
 			name, major, minor := "", "", ""
@@ -163,7 +182,9 @@ func main() {
 			if s, ok := val["minor"]; ok == true {
 				minor = s
 			}
-			fmt.Fprintf(os.Stdout, "namaste - directory type %s - version %s %s\n", name, major, minor)
+			if verbose {
+				fmt.Fprintf(os.Stdout, "namaste - directory type %s - version %s %s\n", name, major, minor)
+			}
 		}
 		os.Exit(0)
 	}
@@ -190,6 +211,18 @@ func main() {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s", err)
 			os.Exit(1)
+		}
+		if asJSON && s != "" {
+			key := fmt.Sprintf("%s", arg[0])
+			m := map[string]string{
+				key: s,
+			}
+			src, err := json.Marshal(m)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				os.Exit(1)
+			}
+			fmt.Fprintf(os.Stdout, "%s\n", src)
 		}
 		if verbose && s != "" {
 			fmt.Fprintf(os.Stdout, "%s\n", s)
