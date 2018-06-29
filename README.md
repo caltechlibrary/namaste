@@ -27,5 +27,6 @@ There are a few things that extend beyond the existing Python namaste
 implementation which are desirable to test. 
 
 + S3 storage support
++ Google Cloud Storage support
 + Output namaste metadata in JSON format
 
