@@ -21,6 +21,7 @@ package namaste
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"path"
 	"strings"
 
@@ -46,9 +47,11 @@ func getNamaste(dName, tag string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
+		if os.Getenv("AWS_SDK_LOAD_CONFIG") == "" {
+			os.Setenv("AWS_SDK_LOAD_CONFIG", "1")
+		}
+		options = storage.EnvToOptions(os.Environ())
 		options["AwsBucket"] = u.Host
-		options["AwsSDKLoadConfig"] = true
-		options["AwsSharedConfigEnabled"] = true
 		if u.Path != "" {
 			dName = path.Join(u.Path, prefix)
 		} else {
@@ -77,7 +80,41 @@ func getNamaste(dName, tag string) ([]string, error) {
 	}
 	if strings.HasPrefix(dName, "gs://") {
 		sType = storage.GS
+		u, err := url.Parse(dName)
+		if err != nil {
+			return nil, err
+		}
+		options := storage.EnvToOptions(os.Environ())
+		options["GoogleBucket"] = u.Host
+		if u.Path != "" {
+			dName = path.Join(u.Path, prefix)
+		} else {
+			dName = prefix
+		}
+		if strings.HasPrefix(dName, "/") {
+			dName = dName[1:]
+		}
+		store, err := storage.Init(sType, options)
+		if err != nil {
+			return nil, err
+		}
+		results := []string{}
+		items, err := store.ReadDir(dName)
+		if err != nil {
+			return nil, err
+		}
+		prefix := fmt.Sprintf("%s=", tag)
+		for _, item := range items {
+			name := item.Name()
+			if strings.HasPrefix(name, prefix) {
+				results = append(results, name)
+			}
+		}
+		return results, nil
 	}
+
+	// NOTE: if we get this far we assume we're working with
+	// storage that supports the concept of directory/folder
 	store, err := storage.Init(sType, options)
 	if err != nil {
 		return nil, err
@@ -112,9 +149,11 @@ func setNamaste(dName, tag, value string) (string, error) {
 		if err != nil {
 			return "", err
 		}
+		if os.Getenv("AWS_SDK_LOAD_CONFIG") == "" {
+			os.Setenv("AWS_SDK_LOAD_CONFIG", "1")
+		}
+		options = storage.EnvToOptions(os.Environ())
 		options["AwsBucket"] = u.Host
-		options["AwsSDKLoadConfig"] = true
-		options["AwsSharedConfigEnabled"] = true
 		if u.Path != "" {
 			dName = u.Path
 		} else {
@@ -123,6 +162,17 @@ func setNamaste(dName, tag, value string) (string, error) {
 	}
 	if strings.HasPrefix(dName, "gs://") {
 		sType = storage.GS
+		u, err := url.Parse(dName)
+		if err != nil {
+			return "", err
+		}
+		options = storage.EnvToOptions(os.Environ())
+		options["GoogleBucket"] = u.Host
+		if u.Path != "" {
+			dName = u.Path
+		} else {
+			dName = ""
+		}
 	}
 	store, err := storage.Init(sType, options)
 	if err != nil {
