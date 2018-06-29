@@ -20,6 +20,7 @@ package namaste
 
 import (
 	"fmt"
+	"net/url"
 	"path"
 	"strings"
 
@@ -36,7 +37,48 @@ func makeNamaste(tag, value string) string {
 }
 
 func getNamaste(dName, tag string) ([]string, error) {
-	store, err := storage.Init(storage.FS, nil)
+	options := map[string]interface{}{}
+	sType := storage.FS
+	prefix := fmt.Sprintf("%s=", tag)
+	if strings.HasPrefix(dName, "s3://") {
+		sType = storage.S3
+		u, err := url.Parse(dName)
+		if err != nil {
+			return nil, err
+		}
+		options["AwsBucket"] = u.Host
+		options["AwsSDKLoadConfig"] = true
+		options["AwsSharedConfigEnabled"] = true
+		if u.Path != "" {
+			dName = path.Join(u.Path, prefix)
+		} else {
+			dName = prefix
+		}
+		if strings.HasPrefix(dName, "/") {
+			dName = dName[1:]
+		}
+		store, err := storage.Init(sType, options)
+		if err != nil {
+			return nil, err
+		}
+		results := []string{}
+		items, err := store.ReadDir(dName)
+		if err != nil {
+			return nil, err
+		}
+		prefix := fmt.Sprintf("%s=", tag)
+		for _, item := range items {
+			name := item.Name()
+			if strings.HasPrefix(name, prefix) {
+				results = append(results, name)
+			}
+		}
+		return results, nil
+	}
+	if strings.HasPrefix(dName, "gs://") {
+		sType = storage.GS
+	}
+	store, err := storage.Init(sType, options)
 	if err != nil {
 		return nil, err
 	}
@@ -49,21 +91,44 @@ func getNamaste(dName, tag string) ([]string, error) {
 		return nil, fmt.Errorf("expected %q to be a directory", dName)
 	}
 	items, err := store.ReadDir(dName)
-	prefix := fmt.Sprintf("%s=", tag)
+	if err != nil {
+		return nil, err
+	}
 	for _, item := range items {
-		if strings.HasPrefix(item.Name(), prefix) {
-			results = append(results, item.Name())
+		name := item.Name()
+		if strings.HasPrefix(name, prefix) {
+			results = append(results, name)
 		}
 	}
 	return results, nil
 }
 
 func setNamaste(dName, tag, value string) (string, error) {
-	store, err := storage.Init(storage.FS, nil)
+	options := map[string]interface{}{}
+	sType := storage.FS
+	if strings.HasPrefix(dName, "s3://") {
+		sType = storage.S3
+		u, err := url.Parse(dName)
+		if err != nil {
+			return "", err
+		}
+		options["AwsBucket"] = u.Host
+		options["AwsSDKLoadConfig"] = true
+		options["AwsSharedConfigEnabled"] = true
+		if u.Path != "" {
+			dName = u.Path
+		} else {
+			dName = ""
+		}
+	}
+	if strings.HasPrefix(dName, "gs://") {
+		sType = storage.GS
+	}
+	store, err := storage.Init(sType, options)
 	if err != nil {
 		return "", err
 	}
-	if store.Type == storage.FS {
+	if sType == storage.FS {
 		dInfo, err := store.Stat(dName)
 		if err != nil {
 			return "", err
@@ -72,8 +137,8 @@ func setNamaste(dName, tag, value string) (string, error) {
 			return "", fmt.Errorf("%q is not a directory", dName)
 		}
 	}
-	namaste := makeNamaste(tag, value)
-	return namaste, store.WriteFile(path.Join(dName, namaste), []byte(value+"\n"), 0664)
+	sNamaste := makeNamaste(tag, value)
+	return sNamaste, store.WriteFile(path.Join(dName, sNamaste), []byte(value+"\n"), 0664)
 }
 
 func DirType(dName, val string) (string, error) {
@@ -97,28 +162,14 @@ func Where(dName, val string) (string, error) {
 }
 
 func Get(dName string) ([]string, error) {
-	store, err := storage.Init(storage.FS, nil)
-	if err != nil {
-		return nil, err
-	}
-	if store.Type == storage.FS {
-		dInfo, err := store.Stat(dName)
-		if err != nil {
-			return nil, err
-		}
-		if dInfo.IsDir() == false {
-			return nil, fmt.Errorf("%q is not a directory", dName)
-		}
-	}
-	items, err := store.ReadDir(dName)
-	if err != nil {
-		return nil, err
-	}
 	results := []string{}
-	for _, item := range items {
-		name := item.Name()
-		if strings.HasPrefix(name, "0=") || strings.HasPrefix(name, "1=") || strings.HasPrefix(name, "2=") || strings.HasPrefix(name, "3=") || strings.HasPrefix(name, "4=") {
-			results = append(results, name)
+	for _, kind := range []string{"0", "1", "2", "3", "4"} {
+		l, err := getNamaste(dName, kind)
+		if err != nil {
+			return results, err
+		}
+		if len(l) > 0 {
+			results = append(results, l...)
 		}
 	}
 	return results, nil

@@ -57,7 +57,6 @@ clean:
 	if [ -d bin ]; then rm -fR bin; fi
 	if [ -d dist ]; then rm -fR dist; fi
 	if [ -d testdata ]; then rm -fR testdata; fi
-	cd py && $(MAKE) clean
 
 dist/linux-amd64:
 	mkdir -p dist/bin
