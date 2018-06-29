@@ -92,7 +92,6 @@ update_version:
 	./update_version.py --yes
 
 release: clean namaste.go distribute_docs dist/linux-amd64 dist/windows-amd64 dist/macosx-amd64 dist/raspbian-arm7
-	cd py && $(MAKE) release
 
 status:
 	git status

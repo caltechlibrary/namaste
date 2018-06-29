@@ -1,5 +1,6 @@
 
-# namaste
+# namaste [![DOI](https://data.caltech.edu/badge/79394591.svg)](https://data.caltech.edu/badge/latestdoi/79394591)
+
 
 This is a Go language port of Namaste (Name as Text) library inspired by the Python
 implementation of [namaste](https://github.com/mjgiarlo/namaste) which in turn was 
