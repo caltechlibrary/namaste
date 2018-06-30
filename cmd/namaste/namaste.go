@@ -88,7 +88,7 @@ func main() {
 	app.BoolVar(&showHelp, "h,help", false, "display help")
 	app.BoolVar(&showVersion, "v,version", false, "display program version")
 	app.BoolVar(&showLicense, "l,license", false, "display license")
-	app.BoolVar(&verbose, "V,verbose", false, "verbose output")
+	app.BoolVar(&verbose, "V,verbose", true, "(default true) verbose output")
 	app.BoolVar(&generateMarkdownDocs, "generate-markdown-docs", false, "output documentation in Markdown")
 
 	// App Options
