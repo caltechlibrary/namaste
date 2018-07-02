@@ -234,7 +234,7 @@ func TestGet(t *testing.T) {
 		"when":  "3=2018",
 		"where": "4=Pasadena",
 	}
-	tags, err := Get(testDir)
+	tags, err := Get(testDir, nil)
 	if err != nil {
 		t.Errorf("Get(%q) failed, %s", testDir, err)
 		cleanOK = false
@@ -256,6 +256,21 @@ func TestGet(t *testing.T) {
 	// Check for unexpected values
 	if len(tags) != len(expected) {
 		t.Errorf("Unexpected value(s) %+v", tags)
+	}
+
+	// Check for specific type request
+	l, err := Get(testDir, []string{"who"})
+	if err != nil {
+		t.Errorf("Get(%q) failed, %s", testDir, err)
+		cleanOK = false
+	}
+	if len(l) != 1 {
+		t.Errorf("expected length 1, got %d - %+v", len(l), l)
+		cleanOK = false
+	}
+	if l[0] != "1=Feynman,R." {
+		t.Errorf("expected '1=Feynman,R.', got %q", l[0])
+		cleanOK = false
 	}
 
 	// Cleanup after test

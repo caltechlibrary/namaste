@@ -58,6 +58,15 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 	// App specific options
 	dName  string
 	asJSON bool
+
+	// Map from field types to number value
+	nameToNum = map[string]int{
+		"type":  0,
+		"who":   1,
+		"what":  2,
+		"when":  3,
+		"where": 4,
+	}
 )
 
 func main() {
@@ -138,7 +147,11 @@ func main() {
 	// Read functions
 	switch strings.ToLower(args[0]) {
 	case "get":
-		l, err := namaste.Get(dName)
+		kinds := []string{}
+		if len(args) > 1 {
+			kinds = args[1:]
+		}
+		l, err := namaste.Get(dName, kinds)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
 			os.Exit(1)

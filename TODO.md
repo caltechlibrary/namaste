@@ -5,6 +5,8 @@
 
 ## Next
 
++ [ ] Get to be able to take an option to return specific types of namaste (E.g. `get who` or `get where`)
+
 ## Someday, Maybe
 
 + [ ] Add a translator for namaste metadata to other metadata standards

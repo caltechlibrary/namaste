@@ -30,7 +30,17 @@ import (
 )
 
 const (
-	Version = `v0.0.1`
+	Version = `v0.0.2`
+)
+
+var (
+	normalizeKind = map[string]string{
+		"type":  "0",
+		"who":   "1",
+		"what":  "2",
+		"when":  "3",
+		"where": "4",
+	}
 )
 
 func makeNamaste(tag, value string) string {
@@ -211,9 +221,19 @@ func Where(dName, val string) (string, error) {
 	return setNamaste(dName, "4", val)
 }
 
-func Get(dName string) ([]string, error) {
+func Get(dName string, kinds []string) ([]string, error) {
+	if len(kinds) == 0 {
+		kinds = []string{"0", "1", "2", "3", "4"}
+	} else {
+		// Convert to numeric string from human text, e.g. type, who, when
+		for i, val := range kinds {
+			if s, ok := normalizeKind[strings.ToLower(val)]; ok == true {
+				kinds[i] = s
+			}
+		}
+	}
 	results := []string{}
-	for _, kind := range []string{"0", "1", "2", "3", "4"} {
+	for _, kind := range kinds {
 		l, err := getNamaste(dName, kind)
 		if err != nil {
 			return results, err
