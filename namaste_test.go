@@ -337,6 +337,23 @@ func TestGetTypes(t *testing.T) {
 	}
 }
 
+func TestEncodeDecode(t *testing.T) {
+	expected := "1=Feynman,R."
+	result := Encode("who", "Feynman,R.")
+	if expected != result {
+		t.Errorf("expected %q, got %q", expected, result)
+	}
+	result = Encode("1", "Feynman,R.")
+	if expected != result {
+		t.Errorf("expected %q, got %q", expected, result)
+	}
+	expected = "Feynman,R."
+	result = Decode(result)
+	if expected != result {
+		t.Errorf("expected %q, got %q", expected, result)
+	}
+}
+
 func TestMain(m *testing.M) {
 	os.RemoveAll(testDir)
 	err := os.MkdirAll(testDir, 0775)

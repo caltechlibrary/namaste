@@ -56,8 +56,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 	generateMarkdownDocs bool
 
 	// App specific options
-	dName  string
-	asJSON bool
+	dName    string
+	asValues bool
+	asJSON   bool
 
 	// Map from field types to number value
 	nameToNum = map[string]int{
@@ -103,6 +104,7 @@ func main() {
 	// App Options
 	app.StringVar(&dName, "d,directory", ".", "directory")
 	app.BoolVar(&asJSON, "json", false, "output in JSON format")
+	app.BoolVar(&asValues, "values", false, "output value of namaste")
 
 	app.Parse()
 
@@ -156,6 +158,11 @@ func main() {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
 			os.Exit(1)
 		}
+		if asValues {
+			for i, val := range l {
+				l[i] = namaste.Decode(val)
+			}
+		}
 		if asJSON {
 			src, err := json.Marshal(l)
 			if err != nil {
@@ -166,7 +173,11 @@ func main() {
 			os.Exit(0)
 		}
 		if verbose {
-			fmt.Fprintf(os.Stdout, "namastes: %s\n", strings.Join(l, ", "))
+			if asValues {
+				fmt.Fprintf(os.Stdout, "%s", strings.Join(l, "\n"))
+			} else {
+				fmt.Fprintf(os.Stdout, "namastes: %s\n", strings.Join(l, ", "))
+			}
 		}
 		os.Exit(0)
 	case "gettypes":

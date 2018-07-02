@@ -34,7 +34,7 @@ const (
 )
 
 var (
-	normalizeKind = map[string]string{
+	normalizeFieldName = map[string]string{
 		"type":  "0",
 		"who":   "1",
 		"what":  "2",
@@ -43,14 +43,26 @@ var (
 	}
 )
 
-func makeNamaste(tag, value string) string {
+func Encode(tag, value string) string {
+	if s, ok := normalizeFieldName[strings.ToLower(tag)]; ok == true {
+		tag = s
+	}
 	return fmt.Sprintf("%s=%s", tag, value)
+}
+
+func Decode(value string) string {
+	for _, prefix := range []string{"0=", "1=", "2=", "3=", "4="} {
+		if strings.HasPrefix(value, prefix) {
+			return value[2:]
+		}
+	}
+	return value
 }
 
 func getNamaste(dName, tag string) ([]string, error) {
 	options := map[string]interface{}{}
 	sType := storage.FS
-	prefix := fmt.Sprintf("%s=", tag)
+	prefix := Encode(tag, "")
 	if strings.HasPrefix(dName, "s3://") {
 		sType = storage.S3
 		u, err := url.Parse(dName)
@@ -79,7 +91,6 @@ func getNamaste(dName, tag string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		prefix := fmt.Sprintf("%s=", tag)
 		for _, item := range items {
 			name := item.Name()
 			if strings.HasPrefix(name, prefix) {
@@ -113,7 +124,6 @@ func getNamaste(dName, tag string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		prefix := fmt.Sprintf("%s=", tag)
 		for _, item := range items {
 			name := item.Name()
 			if strings.HasPrefix(name, prefix) {
@@ -197,7 +207,7 @@ func setNamaste(dName, tag, value string) (string, error) {
 			return "", fmt.Errorf("%q is not a directory", dName)
 		}
 	}
-	sNamaste := makeNamaste(tag, value)
+	sNamaste := Encode(tag, value)
 	return sNamaste, store.WriteFile(path.Join(dName, sNamaste), []byte(value+"\n"), 0664)
 }
 
@@ -227,7 +237,7 @@ func Get(dName string, kinds []string) ([]string, error) {
 	} else {
 		// Convert to numeric string from human text, e.g. type, who, when
 		for i, val := range kinds {
-			if s, ok := normalizeKind[strings.ToLower(val)]; ok == true {
+			if s, ok := normalizeFieldName[strings.ToLower(val)]; ok == true {
 				kinds[i] = s
 			}
 		}
