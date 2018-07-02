@@ -5,7 +5,11 @@
 
 ## Next
 
-+ [ ] Get to be able to take an option to return specific types of namaste (E.g. `get who` or `get where`)
++ [ ] Implement character encoding/decoding for `"*/:<>?\|` per Section 4 of Namaste Spec
++ [ ] Implement truncation per Section 4  Namaste Spec
++ [ ] Add support for `x_` fields
++ [x] Get to be able to take an option to return specific types of namaste (E.g. `get who` or `get where`)
++ [ ] Register dataset_VERSION with Namaste author, John Kunze (jak@ucop.edu) per Section 5 of Namaste Spec
 
 ## Someday, Maybe
 
