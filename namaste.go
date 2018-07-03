@@ -47,16 +47,16 @@ func Encode(tag, value string) string {
 	if s, ok := normalizeFieldName[strings.ToLower(tag)]; ok == true {
 		tag = s
 	}
-	return fmt.Sprintf("%s=%s", tag, value)
+	return fmt.Sprintf("%s=%s", tag, charEncode(value))
 }
 
 func Decode(value string) string {
 	for _, prefix := range []string{"0=", "1=", "2=", "3=", "4="} {
 		if strings.HasPrefix(value, prefix) {
-			return value[2:]
+			return charDecode(value[2:])
 		}
 	}
-	return value
+	return charDecode(value)
 }
 
 func getNamaste(dName, tag string) ([]string, error) {
