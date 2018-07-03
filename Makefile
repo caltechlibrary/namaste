@@ -25,7 +25,7 @@ cmd/namaste/assets.go:
 	pkgassets -o cmd/namaste/assets.go -p main -ext=".md" -strip-prefix="/" -strip-suffix=".md" Examples how-to Help docs/namaste
 	git add cmd/namaste/assets.go
 
-bin/namaste$(EXT): namaste.go cmd/namaste/namaste.go cmd/namaste/assets.go
+bin/namaste$(EXT): namaste.go char_encoding.go cmd/namaste/namaste.go cmd/namaste/assets.go
 	go build -o bin/namaste$(EXT) cmd/namaste/namaste.go cmd/namaste/assets.go
 
 build: $(PROJECT_LIST)
@@ -42,11 +42,15 @@ test: clean bin/namaste$(EXT)
 format:
 	gofmt -w namaste.go
 	gofmt -w namaste_test.go
+	gofmt -w char_encoding.go
+	gofmt -w char_encoding_test.go
 	gofmt -w cmd/namaste/namaste.go
 
 lint:
 	golint namaste.go
 	golint namaste_test.go
+	golint char_encoding.go
+	golint char_encoding_test.go
 	golint cmd/namaste/namaste.go
 
 clean: 
@@ -91,7 +95,7 @@ distribute_docs:
 update_version:
 	./update_version.py --yes
 
-release: clean namaste.go distribute_docs dist/linux-amd64 dist/windows-amd64 dist/macosx-amd64 dist/raspbian-arm7
+release: clean namaste.go char_encoding.go distribute_docs dist/linux-amd64 dist/windows-amd64 dist/macosx-amd64 dist/raspbian-arm7
 
 status:
 	git status

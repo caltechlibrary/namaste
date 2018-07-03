@@ -7,6 +7,7 @@ import (
 func TestCharEncoding(t *testing.T) {
 	encodedChars := map[string]string{
 		"^":  "^5E",
+		" ":  "^20",
 		"\"": "^22",
 		"*":  "^2A",
 		"/":  "^2F",
@@ -18,6 +19,7 @@ func TestCharEncoding(t *testing.T) {
 		"|":  "^7C",
 	}
 	decodedChars := map[string]string{
+		"^20": " ",
 		"^22": "\"",
 		"^2A": "*",
 		"^2F": "/",

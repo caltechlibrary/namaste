@@ -5,7 +5,7 @@
 
 ## Next
 
-+ [ ] Implement character encoding/decoding for `"*/:<>?\|` per Section 4 of Namaste Spec
++ [x] Implement character encoding/decoding for `"*/:<>?\|` per Section 4 of Namaste Spec
 + [ ] Implement truncation per Section 4  Namaste Spec
 + [ ] Add support for `x_` fields
 + [x] Get to be able to take an option to return specific types of namaste (E.g. `get who` or `get where`)

@@ -9,6 +9,7 @@ var (
 		"^": "^5E",
 	}
 	stepTwoEncoding = map[string]string{
+		" ":  "^20",
 		"\"": "^22",
 		"*":  "^2A",
 		"/":  "^2F",
