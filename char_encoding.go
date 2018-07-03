@@ -6,7 +6,7 @@ import (
 
 var (
 	stepOneEncoding = map[string]string{
-		"^": "^5e",
+		"^": "^5E",
 	}
 	stepTwoEncoding = map[string]string{
 		"\"": "^22",
