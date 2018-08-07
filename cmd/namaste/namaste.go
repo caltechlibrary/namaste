@@ -49,11 +49,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 `
 
 	// Standard options
-	showHelp             bool
-	showVersion          bool
-	showLicense          bool
-	verbose              bool
-	generateMarkdownDocs bool
+	showHelp         bool
+	showVersion      bool
+	showLicense      bool
+	verbose          bool
+	generateMarkdown bool
 
 	// App specific options
 	dName    string
@@ -99,7 +99,7 @@ func main() {
 	app.BoolVar(&showVersion, "v,version", false, "display program version")
 	app.BoolVar(&showLicense, "l,license", false, "display license")
 	app.BoolVar(&verbose, "V,verbose", true, "(default true) verbose output")
-	app.BoolVar(&generateMarkdownDocs, "generate-markdown-docs", false, "output documentation in Markdown")
+	app.BoolVar(&generateMarkdown, "generate-markdown", false, "output documentation in Markdown")
 
 	// App Options
 	app.StringVar(&dName, "d,directory", ".", "directory")
@@ -110,8 +110,8 @@ func main() {
 
 	args := app.Args()
 
-	if generateMarkdownDocs {
-		app.GenerateMarkdownDocs(app.Out)
+	if generateMarkdown {
+		app.GenerateMarkdown(os.Stdout)
 		os.Exit(0)
 	}
 
