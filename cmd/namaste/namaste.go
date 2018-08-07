@@ -13,10 +13,13 @@ import (
 )
 
 var (
-	description = `%s is a command line tool for basic metadata in "name as text" 
-format with a directory. . The metadata supported includes
-directory type (with major/minor version numbers), who created it, 
-what is it, what it is, when was it created, where it was created.
+	synopsis = `_%s_ is a tool for adding metadata as directory entry`
+
+	description = `_%s_ is a command line tool for basic metadata 
+in "name as text" format with a directory. . The metadata supported 
+includes directory type (with major/minor version numbers), who 
+created it, what is it, what it is, when was it created, where it 
+was created.
 
 You can see "namaste" metadata by looking at the directory
 contents without any special software. Namaste fields start with
@@ -24,11 +27,26 @@ zero (type), one (who), two (what), three (when) or four (where).
 This is followed by an equal sign then the value of the metadata
 field. E.g.
 
-    0=bagit_0.1
-    1=Twain,M.
-    2=Hamlet
-    3=2008
-    4=Seattle
+` + "```" + `
+   0=bagit_0.1
+   1=Twain,M.
+   2=Hamlet
+   3=2008
+   4=Seattle
+` + "```" + `
+`
+
+	examples = `
+Here is an example of workflow to add type, author, title, 
+year and place to a raw ePub folder named "hamlet-epub".
+` + "```" + `
+    cd hamlet-epub
+	namaste type ePub_3
+	namaste who "Twain, Mark"
+	namaste what "Hamlet"
+	namaste when "2008"
+	namaste where "Seattle, Washington, USA"
+` + "```" + `
 `
 
 	license = `
@@ -54,6 +72,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 	showLicense      bool
 	verbose          bool
 	generateMarkdown bool
+	generateManPage  bool
 
 	// App specific options
 	dName    string
@@ -78,7 +97,9 @@ func main() {
 
 	// Add Help Docs
 	app.AddHelp("license", []byte(fmt.Sprintf(license, appName, namaste.Version)))
+	app.AddHelp("synopsis", []byte(fmt.Sprintf(synopsis, appName)))
 	app.AddHelp("description", []byte(fmt.Sprintf(description, appName)))
+	app.AddHelp("examples", []byte(examples))
 
 	// Add help assets
 	for k, v := range Help {
@@ -100,6 +121,7 @@ func main() {
 	app.BoolVar(&showLicense, "l,license", false, "display license")
 	app.BoolVar(&verbose, "V,verbose", true, "(default true) verbose output")
 	app.BoolVar(&generateMarkdown, "generate-markdown", false, "output documentation in Markdown")
+	app.BoolVar(&generateManPage, "generate-manpage", false, "output documentation in 'nroff -man' format")
 
 	// App Options
 	app.StringVar(&dName, "d,directory", ".", "directory")
@@ -112,6 +134,10 @@ func main() {
 
 	if generateMarkdown {
 		app.GenerateMarkdown(os.Stdout)
+		os.Exit(0)
+	}
+	if generateManPage {
+		app.GenerateManPage(os.Stdout)
 		os.Exit(0)
 	}
 
