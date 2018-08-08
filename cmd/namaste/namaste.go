@@ -142,14 +142,12 @@ func main() {
 	}
 
 	if showHelp {
-		if showHelp {
-			if len(args) > 0 {
-				fmt.Fprintf(os.Stdout, app.Help(args...))
-			} else {
-				app.Usage(os.Stdout)
-			}
-			os.Exit(0)
+		if len(args) > 0 {
+			fmt.Fprintf(os.Stdout, app.Help(args...))
+		} else {
+			app.Usage(os.Stdout)
 		}
+		os.Exit(0)
 	}
 
 	if showLicense {
