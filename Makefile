@@ -58,7 +58,13 @@ clean:
 	if [ -f index.html ]; then rm *.html; fi
 	if [ -d bin ]; then rm -fR bin; fi
 	if [ -d dist ]; then rm -fR dist; fi
+	if [ -d man ]; then rm -fR man; fi
 	if [ -d testdata ]; then rm -fR testdata; fi
+
+man: build
+	mkdir -p man/man1
+	bin/namaste -generate-manpage | nroff -Tutf8 -man > man/man1/namaste.1
+
 
 dist/linux-amd64:
 	mkdir -p dist/bin
