@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"strings"
@@ -78,22 +80,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 	dName    string
 	asValues bool
 	asJSON   bool
-
-	// Map from field types to number value
-	nameToNum = map[string]int{
-		"type":  0,
-		"who":   1,
-		"what":  2,
-		"when":  3,
-		"where": 4,
-	}
 )
 
 func main() {
 	appName := path.Base(os.Args[0])
 	app := cli.NewCli(namaste.Version)
 	// We require an "ACTION" or verb for command to work.
-	app.ActionsRequired = true
+	app.VerbsRequired = true
 
 	// Add Help Docs
 	app.AddHelp("license", []byte(fmt.Sprintf(license, appName, namaste.Version)))
@@ -106,27 +99,284 @@ func main() {
 		app.AddHelp(k, v)
 	}
 
-	// Document our verbs
-	app.AddVerb("type", "returns the type of a directory if known")
-	app.AddVerb("who", "returns the who value of a directory if known")
-	app.AddVerb("what", "returns the what value of a directory if known")
-	app.AddVerb("when", "returns the when value of a directory if known")
-	app.AddVerb("where", "returns the where value of a directory if known")
-	app.AddVerb("get", "returns all the namaste metadata of a directory if known")
-	app.AddVerb("gettypes", "returns the types of a directory if known")
-
 	// Standard Options
 	app.BoolVar(&showHelp, "h,help", false, "display help")
 	app.BoolVar(&showVersion, "v,version", false, "display program version")
 	app.BoolVar(&showLicense, "l,license", false, "display license")
 	app.BoolVar(&verbose, "V,verbose", true, "(default true) verbose output")
+
 	app.BoolVar(&generateMarkdown, "generate-markdown", false, "output documentation in Markdown")
 	app.BoolVar(&generateManPage, "generate-manpage", false, "output documentation in 'nroff -man' format")
 
 	// App Options
 	app.StringVar(&dName, "d,directory", ".", "directory")
 	app.BoolVar(&asJSON, "json", false, "output in JSON format")
-	app.BoolVar(&asValues, "values", false, "output value of namaste")
+	app.BoolVar(&asValues, "values", false, "output value only, one per line")
+
+	// Read Verbs
+	verb := app.NewVerb("get", "returns namaste metadata of a directory if known", func(in io.Reader, out io.Writer, eout io.Writer, args []string, flagSet *flag.FlagSet) int {
+		err := flagSet.Parse(args)
+		if err != nil {
+			fmt.Fprintf(eout, "%s\n", err)
+			return 1
+		}
+		args = flagSet.Args()
+
+		l, err := namaste.Get(dName, args)
+		if err != nil {
+			fmt.Fprintf(eout, "%s\n", err)
+			return 1
+		}
+		if asValues {
+			for i, val := range l {
+				l[i] = namaste.Decode(val)
+			}
+		}
+		if asJSON {
+			src, err := json.Marshal(l)
+			if err != nil {
+				fmt.Fprintf(eout, "%s\n", err)
+				return 1
+			}
+			fmt.Fprintf(out, "%s\n", src)
+			return 0
+		}
+		if asValues {
+			fmt.Fprintf(out, "%s\n", strings.Join(l, "\n"))
+		} else {
+			fmt.Fprintf(out, "namastes: %s\n", strings.Join(l, ", "))
+		}
+		return 0
+	})
+	verb.SetParams("[TYPE]", "[TYPE ...]")
+	verb.BoolVar(&asValues, "values", false, "output values only, one per line")
+	verb.BoolVar(&asJSON, "j,json", false, "set json output")
+
+	verb = app.NewVerb("gettypes", "returns the types of a directory if known", func(in io.Reader, out io.Writer, eout io.Writer, args []string, flagSet *flag.FlagSet) int {
+		err := flagSet.Parse(args)
+		if err != nil {
+			fmt.Fprintf(eout, "%s\n", err)
+			return 1
+		}
+		args = flagSet.Args()
+
+		m, err := namaste.GetTypes(dName)
+		if err != nil {
+			fmt.Fprintf(eout, "%s\n", err)
+			return 1
+		}
+		if asJSON {
+			src, err := json.Marshal(m)
+			if err != nil {
+				fmt.Fprintf(eout, "%s\n", err)
+				return 1
+			}
+			fmt.Fprintf(out, "%s\n", src)
+			return 0
+		}
+		for _, val := range m {
+			name, major, minor := "", "", ""
+			if s, ok := val["name"]; ok == true {
+				name = s
+			}
+			if s, ok := val["major"]; ok == true {
+				major = s
+			}
+			if s, ok := val["minor"]; ok == true {
+				minor = s
+			}
+			// Insert newline if required
+			if asValues {
+				fmt.Fprintf(out, "%s_%s.%s\n", name, major, minor)
+			} else {
+				fmt.Fprintf(out, "namaste - directory type %s - version %s %s\n", name, major, minor)
+			}
+		}
+		return 0
+	})
+	verb.BoolVar(&asValues, "values", false, "output values only, one per line")
+	verb.BoolVar(&asJSON, "j,json", false, "set json output")
+
+	// Write Verbs
+	verb = app.NewVerb("type", "set the type of a directory", func(in io.Reader, out io.Writer, eout io.Writer, args []string, flagSet *flag.FlagSet) int {
+		err := flagSet.Parse(args)
+		if err != nil {
+			fmt.Fprintf(eout, "%s\n", err)
+			return 1
+		}
+		args = flagSet.Args()
+		if len(args) == 0 {
+			fmt.Fprintf(eout, "Missing value\n")
+			return 1
+		}
+
+		s, err := namaste.DirType(dName, args[0])
+		if err != nil {
+			fmt.Fprintf(eout, "%s\n", err)
+			return 1
+		}
+		if asJSON && s != "" {
+			m := map[string]string{
+				"type": s,
+			}
+			src, err := json.Marshal(m)
+			if err != nil {
+				fmt.Fprintf(eout, "%s\n", err)
+				return 1
+			}
+			fmt.Fprintf(out, "%s\n", src)
+		}
+		if verbose && s != "" {
+			fmt.Fprintf(out, "%s\n", s)
+		}
+		return 0
+	})
+	verb.BoolVar(&asJSON, "j,json", false, "set json output")
+	verb.BoolVar(&verbose, "V,verbose", false, "set verbose output")
+
+	verb = app.NewVerb("who", "sets the who value of a directory", func(in io.Reader, out io.Writer, eout io.Writer, args []string, flagSet *flag.FlagSet) int {
+		err := flagSet.Parse(args)
+		if err != nil {
+			fmt.Fprintf(eout, "%s\n", err)
+			return 1
+		}
+		args = flagSet.Args()
+		if len(args) == 0 {
+			fmt.Fprintf(eout, "Missing value\n")
+			return 1
+		}
+
+		s, err := namaste.Who(dName, args[0])
+		if err != nil {
+			fmt.Fprintf(eout, "%s\n", err)
+			return 1
+		}
+		if asJSON && s != "" {
+			m := map[string]string{
+				"who": s,
+			}
+			src, err := json.Marshal(m)
+			if err != nil {
+				fmt.Fprintf(eout, "%s\n", err)
+				return 1
+			}
+			fmt.Fprintf(out, "%s\n", src)
+		}
+		if verbose && s != "" {
+			fmt.Fprintf(out, "%s\n", s)
+		}
+		return 0
+	})
+	verb.BoolVar(&asJSON, "j,json", false, "set json output")
+	verb.BoolVar(&verbose, "V,verbose", false, "set verbose output")
+
+	verb = app.NewVerb("what", "sets the what value of a directory", func(in io.Reader, out io.Writer, eout io.Writer, args []string, flagSet *flag.FlagSet) int {
+		err := flagSet.Parse(args)
+		if err != nil {
+			fmt.Fprintf(eout, "%s\n", err)
+			return 1
+		}
+		args = flagSet.Args()
+		if len(args) == 0 {
+			fmt.Fprintf(eout, "Missing value\n")
+			return 1
+		}
+
+		s, err := namaste.What(dName, args[0])
+		if err != nil {
+			fmt.Fprintf(eout, "%s\n", err)
+			return 1
+		}
+		if asJSON && s != "" {
+			m := map[string]string{
+				"what": s,
+			}
+			src, err := json.Marshal(m)
+			if err != nil {
+				fmt.Fprintf(eout, "%s\n", err)
+				return 1
+			}
+			fmt.Fprintf(out, "%s\n", src)
+		}
+		if verbose && s != "" {
+			fmt.Fprintf(out, "%s\n", s)
+		}
+		return 0
+	})
+	verb.BoolVar(&asJSON, "j,json", false, "set json output")
+	verb.BoolVar(&verbose, "V,verbose", false, "set verbose output")
+
+	verb = app.NewVerb("when", "sets the when value of a directory", func(in io.Reader, out io.Writer, eout io.Writer, args []string, flagSet *flag.FlagSet) int {
+		err := flagSet.Parse(args)
+		if err != nil {
+			fmt.Fprintf(eout, "%s\n", err)
+			return 1
+		}
+		args = flagSet.Args()
+		if len(args) == 0 {
+			fmt.Fprintf(eout, "Missing value\n")
+			return 1
+		}
+
+		s, err := namaste.When(dName, args[0])
+		if err != nil {
+			fmt.Fprintf(eout, "%s\n", err)
+			return 1
+		}
+		if asJSON && s != "" {
+			m := map[string]string{
+				"when": s,
+			}
+			src, err := json.Marshal(m)
+			if err != nil {
+				fmt.Fprintf(eout, "%s\n", err)
+				return 1
+			}
+			fmt.Fprintf(out, "%s\n", src)
+		}
+		if verbose && s != "" {
+			fmt.Fprintf(out, "%s\n", s)
+		}
+		return 0
+	})
+	verb.BoolVar(&asJSON, "j,json", false, "set json output")
+	verb.BoolVar(&verbose, "V,verbose", false, "set verbose output")
+
+	verb = app.NewVerb("where", "sets the where value of a directory", func(in io.Reader, out io.Writer, eout io.Writer, args []string, flagSet *flag.FlagSet) int {
+		err := flagSet.Parse(args)
+		if err != nil {
+			fmt.Fprintf(eout, "%s\n", err)
+			return 1
+		}
+		args = flagSet.Args()
+		if len(args) == 0 {
+			fmt.Fprintf(eout, "Missing value\n")
+			return 1
+		}
+
+		s, err := namaste.Where(dName, args[0])
+		if err != nil {
+			fmt.Fprintf(eout, "%s\n", err)
+			return 1
+		}
+		if asJSON && s != "" {
+			m := map[string]string{
+				"where": s,
+			}
+			src, err := json.Marshal(m)
+			if err != nil {
+				fmt.Fprintf(eout, "%s\n", err)
+				return 1
+			}
+			fmt.Fprintf(out, "%s\n", src)
+		}
+		if verbose && s != "" {
+			fmt.Fprintf(out, "%s\n", s)
+		}
+		return 0
+	})
+	verb.BoolVar(&asJSON, "j,json", false, "set json output")
+	verb.BoolVar(&verbose, "V,verbose", false, "set verbose output")
 
 	app.Parse()
 
@@ -165,115 +415,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	var (
-		s   string
-		err error
-	)
-
-	// Read functions
-	switch strings.ToLower(args[0]) {
-	case "get":
-		kinds := []string{}
-		if len(args) > 1 {
-			kinds = args[1:]
-		}
-		l, err := namaste.Get(dName, kinds)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", err)
-			os.Exit(1)
-		}
-		if asValues {
-			for i, val := range l {
-				l[i] = namaste.Decode(val)
-			}
-		}
-		if asJSON {
-			src, err := json.Marshal(l)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%s\n", err)
-				os.Exit(1)
-			}
-			fmt.Fprintf(os.Stdout, "%s\n", src)
-			os.Exit(0)
-		}
-		if verbose {
-			if asValues {
-				fmt.Fprintf(os.Stdout, "%s", strings.Join(l, "\n"))
-			} else {
-				fmt.Fprintf(os.Stdout, "namastes: %s\n", strings.Join(l, ", "))
-			}
-		}
-		os.Exit(0)
-	case "gettypes":
-		m, err := namaste.GetTypes(dName)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", err)
-			os.Exit(1)
-		}
-		if asJSON {
-			src, err := json.Marshal(m)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%s\n", err)
-				os.Exit(1)
-			}
-			fmt.Fprintf(os.Stdout, "%s\n", src)
-			os.Exit(0)
-		}
-		for _, val := range m {
-			name, major, minor := "", "", ""
-			if s, ok := val["name"]; ok == true {
-				name = s
-			}
-			if s, ok := val["major"]; ok == true {
-				major = s
-			}
-			if s, ok := val["minor"]; ok == true {
-				minor = s
-			}
-			if verbose {
-				fmt.Fprintf(os.Stdout, "namaste - directory type %s - version %s %s\n", name, major, minor)
-			}
-		}
-		os.Exit(0)
-	}
-
-	// Write functions
-	for _, arg := range args[1:] {
-		switch strings.ToLower(args[0]) {
-		case "type":
-			s, err = namaste.DirType(dName, arg)
-		case "who":
-			s, err = namaste.Who(dName, arg)
-		case "what":
-			s, err = namaste.What(dName, arg)
-		case "when":
-			s, err = namaste.When(dName, arg)
-		case "where":
-			s, err = namaste.Where(dName, arg)
-		default:
-			args := os.Args[:]
-			args[0] = appName
-			fmt.Fprintf(os.Stderr, "Do not understand %q, type %s -help", strings.Join(args, " "), appName)
-			os.Exit(1)
-		}
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s", err)
-			os.Exit(1)
-		}
-		if asJSON && s != "" {
-			key := fmt.Sprintf("%s", arg[0])
-			m := map[string]string{
-				key: s,
-			}
-			src, err := json.Marshal(m)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%s\n", err)
-				os.Exit(1)
-			}
-			fmt.Fprintf(os.Stdout, "%s\n", src)
-		}
-		if verbose && s != "" {
-			fmt.Fprintf(os.Stdout, "%s\n", s)
-		}
+	// Application Logic
+	exitCode := app.Run(args)
+	if exitCode != 0 {
+		os.Exit(exitCode)
 	}
 }
