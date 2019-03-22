@@ -13,6 +13,8 @@ github.com/aws/aws-sdk-go v1.19.0 h1:3d9Htr/dl/+8xJYx/fpjEifvfpabZB1YUu61i/WX87Q
 github.com/aws/aws-sdk-go v1.19.0/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/bradfitz/go-smtpd v0.0.0-20170404230938-deb6d6237625/go.mod h1:HYsPBTaaSFSlLx/70C2HPIMNZpVV8+vt/A+FMnYP11g=
+github.com/caltechlibrary/cli v0.0.16 h1:jgw6dZb3VDy9L5LrWWm1ieqHYAMKgcv+NF6osSj3YRM=
+github.com/caltechlibrary/cli v0.0.16/go.mod h1:BVT+6d/QqcN4UApWR3ufjkkKj2O6+48B4G6iUpP8m38=
 github.com/caltechlibrary/storage v0.0.0-20190322191942-c22734bf526d h1:rHYkiHXOh6YXFk5fI2U6V05j0qoJuzyBKacKkB/tryI=
 github.com/caltechlibrary/storage v0.0.0-20190322191942-c22734bf526d/go.mod h1:mXevEWUD3lw0AoM2HXl0C/QauqisRx8jeNvuYcFFJLE=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
