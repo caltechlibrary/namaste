@@ -231,9 +231,13 @@ func Where(dName, val string) (string, error) {
 	return setNamaste(dName, "4", val)
 }
 
+func Note(dName, val string) (string, error) {
+	return setNamaste(dName, "note", val)
+}
+
 func Get(dName string, kinds []string) ([]string, error) {
 	if len(kinds) == 0 {
-		kinds = []string{"0", "1", "2", "3", "4"}
+		kinds = []string{"0", "1", "2", "3", "4", "note"}
 	} else {
 		// Convert to numeric string from human text, e.g. type, who, when
 		for i, val := range kinds {
