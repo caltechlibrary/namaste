@@ -20,15 +20,13 @@ package namaste
 
 import (
 	"fmt"
+	"os"
 	"path"
 	"strings"
-
-	// Caltech Library Package
-	"github.com/caltechlibrary/storage"
 )
 
 const (
-	Version = `v0.0.5`
+	Version = `v0.0.6`
 )
 
 var (
@@ -58,25 +56,17 @@ func Decode(value string) string {
 }
 
 func getNamaste(dName, tag string) ([]string, error) {
-	options := map[string]interface{}{}
-	sType := storage.FS
 	prefix := Encode(tag, "")
 
-	// NOTE: if we get this far we assume we're working with
-	// storage that supports the concept of directory/folder
-	store, err := storage.Init(sType, options)
-	if err != nil {
-		return nil, err
-	}
 	results := []string{}
-	dInfo, err := store.Stat(dName)
+	dInfo, err := os.Stat(dName)
 	if err != nil {
 		return nil, err
 	}
 	if dInfo.IsDir() == false {
 		return nil, fmt.Errorf("expected %q to be a directory", dName)
 	}
-	items, err := store.ReadDir(dName)
+	items, err := os.ReadDir(dName)
 	if err != nil {
 		return nil, err
 	}
@@ -90,23 +80,15 @@ func getNamaste(dName, tag string) ([]string, error) {
 }
 
 func setNamaste(dName, tag, value string) (string, error) {
-	options := map[string]interface{}{}
-	sType := storage.FS
-	store, err := storage.Init(sType, options)
+	dInfo, err := os.Stat(dName)
 	if err != nil {
 		return "", err
 	}
-	if sType == storage.FS {
-		dInfo, err := store.Stat(dName)
-		if err != nil {
-			return "", err
-		}
-		if dInfo.IsDir() == false {
-			return "", fmt.Errorf("%q is not a directory", dName)
-		}
+	if dInfo.IsDir() == false {
+		return "", fmt.Errorf("%q is not a directory", dName)
 	}
 	sNamaste := Encode(tag, value)
-	return sNamaste, store.WriteFile(path.Join(dName, sNamaste), []byte(value+"\n"), 0664)
+	return sNamaste, os.WriteFile(path.Join(dName, sNamaste), []byte(value+"\n"), 0664)
 }
 
 func DirType(dName, val string) (string, error) {
