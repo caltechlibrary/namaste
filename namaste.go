@@ -25,10 +25,6 @@ import (
 	"strings"
 )
 
-const (
-	Version = `v0.0.6`
-)
-
 var (
 	normalizeFieldName = map[string]string{
 		"type":  "0",

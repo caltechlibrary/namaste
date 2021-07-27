@@ -6,7 +6,7 @@
     "codeRepository": "https://github.com/caltechlibrary/namaste",
     "issueTracker": "https://github.com/caltechlibrary/namaste/issues",
     "license": "https://caltechlibrary/namaste/LICENSE",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "author": [
         {
             "@type": "Person",
@@ -30,5 +30,12 @@
     "maintainer": "https://orcid.org/0000-0003-0900-6903",
     "programmingLanguage": [
         "Go"
-    ]
+    ],
+    "funder": [
+  {
+    "@id": "https://doi.org/10.13039/100006961",
+    "@type": "Organization",
+    "name": "Caltech Library"
+  }
+]
 }
